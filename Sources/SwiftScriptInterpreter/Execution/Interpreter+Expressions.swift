@@ -15,6 +15,7 @@ extension Interpreter {
     ///   escaping this node without a position. Inner frames stamp
     ///   first, so the tightest position wins and outer frames no-op.
     func evaluate(_ expr: ExprSyntax, in scope: Scope) async throws -> Value {
+        try Task.checkCancellation()
         let offset = Self.diagnosticAnchor(for: expr)
         return try await Interpreter.$evaluationOffset.withValue(offset) {
             do {

@@ -1,3 +1,4 @@
+import Foundation
 import SwiftSyntax
 import SwiftScriptAST
 import ShellKit
@@ -111,6 +112,32 @@ public final class Interpreter: @unchecked Sendable {
     ///    `Shell.processDefault`, which mirrors `ProcessInfo.processInfo
     ///    .arguments`. That's the standalone-CLI path.
     public var scriptArguments: [String] = []
+
+    /// How deep script functions may call each other before evaluation
+    /// stops with a runtime error. `nil` (the default) means no limit.
+    /// Each level of this async tree-walker holds its frames on the heap,
+    /// so runaway recursion grows memory fast; hosts that run untrusted
+    /// or user-written scripts set a limit (a few hundred is plenty).
+    public var maxCallDepth: Int?
+    private var callDepth = 0
+    private let callDepthLock = NSLock()
+
+    /// Enters one level of script function call, or throws when that
+    /// would pass ``maxCallDepth``. Pair with ``leaveCall()``.
+    func enterCall() throws {
+        let depth = callDepthLock.withLock {
+            callDepth += 1
+            return callDepth
+        }
+        if let maxCallDepth, depth > maxCallDepth {
+            leaveCall()
+            throw RuntimeError.invalid("functions nested more than \(maxCallDepth) calls deep")
+        }
+    }
+
+    func leaveCall() {
+        callDepthLock.withLock { callDepth -= 1 }
+    }
 
     /// Modules whose import name (`Foundation`, `Darwin`, …) has appeared
     /// in an `import` statement at the top of a script. Foundation-side

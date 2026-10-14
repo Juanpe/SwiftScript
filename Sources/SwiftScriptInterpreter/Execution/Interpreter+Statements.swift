@@ -17,6 +17,9 @@ func paramIsInout(_ type: TypeSyntax) -> Bool {
 
 extension Interpreter {
     func execute(item: CodeBlockItemSyntax, in scope: Scope) async throws -> Value {
+        // A cancelled task (say, a host's time limit) stops at the next
+        // statement, so `while true {}` can't run forever.
+        try Task.checkCancellation()
         do {
             switch item.item {
             case .decl(let decl):

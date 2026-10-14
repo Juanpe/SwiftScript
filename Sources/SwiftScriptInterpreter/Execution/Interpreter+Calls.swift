@@ -527,6 +527,8 @@ extension Interpreter {
             defer {
                 if fn.staticContext != nil { staticContextStack.removeLast() }
             }
+            try enterCall()
+            defer { leaveCall() }
             let callScope = Scope(parent: capturedScope)
             if fn.parameters.isEmpty {
                 // Anonymous-args closure: bind $0, $1, … to whatever args
