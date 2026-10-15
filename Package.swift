@@ -37,8 +37,9 @@ let package = Package(
         // package whose own dependencies are branch-pinned. `upToNextMinor`
         // because ShellKit is 0.x and a minor bump may change API; the
         // family moves minors together (Cocoanetics/SwiftBash#89).
-        .package(url: "https://github.com/Cocoanetics/ShellKit",
-                 .upToNextMinor(from: "0.1.0")),
+        // Fork with HostInfo.real() reading the host name without the
+        // network (ProcessInfo.hostName can hang an iOS app).
+        .package(url: "https://github.com/Juanpe/ShellKit", exact: "0.1.1-runline.1"),
     ],
     targets: [
         .target(
